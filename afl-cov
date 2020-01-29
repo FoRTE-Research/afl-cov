@@ -584,7 +584,7 @@ def lcov_gen_coverage(cov_paths, cargs):
             + cargs.code_dir + " --output-file " \
             + cov_paths['lcov_info'], \
             cov_paths['log_file'], cargs, LOG_ERRORS, \
-            timeout=None)
+            timeout=cargs.timeout)
 
     if (cargs.disable_lcov_exclude_pattern):
         out_lines = run_cmd(cargs.lcov_path \
@@ -593,7 +593,7 @@ def lcov_gen_coverage(cov_paths, cargs):
                 + " -a " + cov_paths['lcov_info'] \
                 + " --output-file " + cov_paths['lcov_info_final'], \
                 cov_paths['log_file'], cargs, WANT_OUTPUT, \
-                timeout=None)[1]
+                timeout=cargs.timeout)[1]
     else:
         tmp_file = NamedTemporaryFile(delete=False)
         run_cmd(cargs.lcov_path \
@@ -712,14 +712,24 @@ def run_cmd(cmd, log_file, cargs, collect, timeout):
     else:
         fh = open(os.devnull, 'w')
 
-    es = 0
-    try:
-        es = subprocess.call(cmd, stdin=None,
-            stdout=fh, stderr=subprocess.STDOUT, shell=True, \
-            timeout=timeout) 
+    #try:
+    #    es = subprocess.call(cmd, stdin=None,
+    #        stdout=fh, stderr=subprocess.STDOUT, shell=True, \
+    #        timeout=timeout) 
 
-    except subprocess.TimeoutExpired:
-        pass
+    es = -1 # setup error status initial value
+    p = subprocess.Popen(cmd, stdin=None, stdout=fh,
+        stderr=subprocess.STDOUT, shell=True) # setup shell
+
+    try:
+        es = p.wait(timeout)
+    except:
+        p.terminate()
+    
+    p.communicate()
+        
+    #except subprocess.TimeoutExpired:
+        #continue
 
     fh.close()
 
@@ -820,7 +830,7 @@ def init_tracking(cov_paths, cargs):
                 + lcov_opts \
                 + " --no-checksum --zerocounters --directory " \
                 + cargs.code_dir, cov_paths['log_file'], cargs, LOG_ERRORS, \
-                timeout=None)
+                timeout=cargs.timeout)
 
         run_cmd(cargs.lcov_path \
                 + lcov_opts
@@ -829,7 +839,7 @@ def init_tracking(cov_paths, cargs):
                 + " --output-file " \
                 + cov_paths['lcov_base'], \
                 cov_paths['log_file'], cargs, LOG_ERRORS, \
-                timeout=None)
+                timeout=cargs.timeout)
 
     return True
 
@@ -1132,7 +1142,7 @@ def parse_cmdline():
 
     p = argparse.ArgumentParser()
 
-    p.add_argument("-t", "--timeout", type=int,
+    p.add_argument("-t", "--timeout", type=float,
             help="Execution timeout (default=40ms)", default=40)
     p.add_argument("-e", "--coverage-cmd", type=str,
             help="Set command to exec (including args, and assumes code coverage support)")

@@ -584,7 +584,7 @@ def lcov_gen_coverage(cov_paths, cargs):
             + cargs.code_dir + " --output-file " \
             + cov_paths['lcov_info'], \
             cov_paths['log_file'], cargs, LOG_ERRORS, \
-            timeout=cargs.timeout)
+            timeout=None)
 
     if (cargs.disable_lcov_exclude_pattern):
         out_lines = run_cmd(cargs.lcov_path \
@@ -593,7 +593,7 @@ def lcov_gen_coverage(cov_paths, cargs):
                 + " -a " + cov_paths['lcov_info'] \
                 + " --output-file " + cov_paths['lcov_info_final'], \
                 cov_paths['log_file'], cargs, WANT_OUTPUT, \
-                timeout=cargs.timeout)[1]
+                timeout=None)[1]
     else:
         tmp_file = NamedTemporaryFile(delete=False)
         run_cmd(cargs.lcov_path \
@@ -712,24 +712,16 @@ def run_cmd(cmd, log_file, cargs, collect, timeout):
     else:
         fh = open(os.devnull, 'w')
 
-    #try:
-    #    es = subprocess.call(cmd, stdin=None,
-    #        stdout=fh, stderr=subprocess.STDOUT, shell=True, \
-    #        timeout=timeout) 
-
-    es = -1 # setup error status initial value
+    es = -1 # set initial status value
     p = subprocess.Popen(cmd, stdin=None, stdout=fh,
-        stderr=subprocess.STDOUT, shell=True) # setup shell
+        stderr=subprocess.STDOUT, shell=True) 
 
     try:
         es = p.wait(timeout)
     except:
-        p.terminate()
-    
-    p.communicate()
-        
-    #except subprocess.TimeoutExpired:
-        #continue
+        p.kill()
+        time.sleep(1)  
+        p.communicate()
 
     fh.close()
 
@@ -830,7 +822,7 @@ def init_tracking(cov_paths, cargs):
                 + lcov_opts \
                 + " --no-checksum --zerocounters --directory " \
                 + cargs.code_dir, cov_paths['log_file'], cargs, LOG_ERRORS, \
-                timeout=cargs.timeout)
+                timeout=None)
 
         run_cmd(cargs.lcov_path \
                 + lcov_opts
@@ -839,7 +831,7 @@ def init_tracking(cov_paths, cargs):
                 + " --output-file " \
                 + cov_paths['lcov_base'], \
                 cov_paths['log_file'], cargs, LOG_ERRORS, \
-                timeout=cargs.timeout)
+                timeout=None)
 
     return True
 

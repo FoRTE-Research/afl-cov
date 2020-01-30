@@ -725,7 +725,6 @@ def run_cmd(cmd, log_file, cargs, collect, timeout):
         es = proc.wait(timeout)
     except:
         proc.terminate()
-        exit(0)
 
     fh.close()
 

@@ -39,11 +39,10 @@ import time
 import signal
 import sys, os
 
-import subprocess
-#try:
-#    import subprocess32 as subprocess
-#except ImportError:
-#    import subprocess
+try:
+    import subprocess32 as subprocess
+except ImportError:
+    import subprocess
 
 __version__ = '0.6.2'
 
@@ -717,7 +716,7 @@ def run_cmd(cmd, log_file, cargs, collect, timeout):
     # and wait for timeout (if provided)
 
     es = -1 
-    cmd = cmd.split(" ")
+    cmd = [x for x in cmd.split(" ") if x != ''] 
 
     proc = subprocess.Popen(cmd, stdin=None, stdout=fh,
         stderr=subprocess.STDOUT, shell=False) 
@@ -726,6 +725,7 @@ def run_cmd(cmd, log_file, cargs, collect, timeout):
         es = proc.wait(timeout)
     except:
         proc.terminate()
+        exit(0)
 
     fh.close()
 
